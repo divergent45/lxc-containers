@@ -40,11 +40,16 @@
 #    - "{{ hostvars[physical_host]['ansible_os_family'] | lower }}.yml"
   tags:
     - always
-
+ 
+- debug:
+    msg: "{{ item }}"
+  with_items:
+    - {{ containers.key.physical_host }}     
+    - {{ containers.key }}
 - include: container_create.yml
   when:
-    - containers.key.physical_host is defined
-    - containers.key is defined
-    - containers.key.physical_host != containers.key
+    - {{ containers.key.physical_host  is defined }}
+    - {{ containers.key is defined }}
+    - {{ containers.key.physical_host != containers.key }}
   tags:
     - lxc_container_create
