@@ -18,7 +18,7 @@
   register: vg_result
   failed_when: false
   changed_when: vg_result.rc != 0
-  delegate_to: "{{ container.key.physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   when: lxc_container_backing_store is not defined or lxc_container_backing_store == "lvm"
   tags:
     - lxc_container_create-vg-detect
@@ -35,28 +35,28 @@
     path: "{{ item }}"
     state: "directory"
   with_items:
-    - "/openstack/{{ container.key }}"
-    - "/openstack/backup/{{ container.key }}"
-    - "/openstack/log/{{ container.key }}"
-    - "{{ lxc_container_directory }}/{{ container.key }}"
-  delegate_to: "{{ physical_host }}"
+    - "/openstack/{{ containers.key }}"
+    - "/openstack/backup/{{ containers.key }}"
+    - "/openstack/log/{{ containers.key }}"
+    - "{{ lxc_container_directory }}/{{ containers.key }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   tags:
     - lxc_container_create-directories
 
 - name: LXC autodev setup
   template:
     src: "autodev.j2"
-    dest: "/var/lib/lxc/{{ container.key }}/autodev"
+    dest: "/var/lib/lxc/{{ containers.key }}/autodev"
     owner: "root"
     group: "root"
     mode: "0755"
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   tags:
     - lxc_container_create-autodev
 
 - name: Create container
   lxc_container:
-    name: "{{ container.key }}"
+    name: "{{ containers.key }}"
     container_log: true
     container_log_level: "{{ (debug | bool) | ternary('DEBUG', 'INFO') }}"
     config: "{{ lxc_container_config }}"
@@ -68,7 +68,7 @@
     fs_type: "{{ lxc_container_fs_type }}"
     vg_name: "{{ lxc_container_vg_name }}"
     template_options: "{{ lxc_container_download_template_options }}"
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   when: >
     lxc_container_backing_store != "overlayfs" or
     (lxc_container_backing_store == 'lvm' and not
@@ -81,9 +81,9 @@
 # next two tasks do not use the lxc_container module.
 # TODO(odyssey4me): Revisit this once a fix has merged
 - name: Check if container exists (copy-on-write backing store)
-  command: "lxc-info -n {{ container.key }}"
+  command: "lxc-info -n {{ containers.key }}"
   failed_when: false
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   register: lxc_container_info
   when: >
     lxc_container_backing_store == "overlayfs" or
@@ -99,11 +99,11 @@
   command: >
     lxc-copy --snapshot -B {{ lxc_container_backing_store }}
     --name {{ lxc_container_base_name }}
-    --newname {{ container.key }}
+    --newname {{ containers.key }}
     -L {{ properties.container_fs_size | default(lxc_container_fs_size) }}
-    --logfile {{ lxc_container_log_path }}/lxc-{{ container.key }}.log
+    --logfile {{ lxc_container_log_path }}/lxc-{{ containers.key }}.log
     --logpriority {{ (debug | bool) | ternary('DEBUG', 'INFO') }}
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   when: >
     (lxc_container_backing_store == "overlayfs" or
     (lxc_container_backing_store == 'lvm' and
@@ -114,10 +114,10 @@
     - lxc_container_create-create
 
 - name: Check container state
-  command: "lxc-info -n {{ container.key }} --state"
+  command: "lxc-info -n {{ containers.key }} --state"
   failed_when: false
   changed_when: false
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   register: _lxc_container_state
 
 # Due to https://github.com/ansible/ansible-modules-extras/issues/2691
@@ -125,28 +125,28 @@
 # TODO(odyssey4me): revisit this once the bug is fixed and released
 - name: Start the container if it is not already running
   command: >
-    lxc-start --daemon --name {{ container.key }}
-    --logfile {{ lxc_container_log_path }}/lxc-{{ container.key }}.log
+    lxc-start --daemon --name {{ containers.key }}
+    --logfile {{ lxc_container_log_path }}/lxc-{{ containers.key }}.log
     --logpriority {{ (debug | bool) | ternary('DEBUG', 'INFO') }}
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   when: _lxc_container_state.stdout.find('STOPPED') != -1
 
 - name: Execute container commands
   lxc_container:
-    name: "{{ container.key }}"
+    name: "{{ containers.key }}"
     container_command: |
       {{ lxc_container_commands }}
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   tags:
     - lxc_container_create-commands
 
 - name: Write default container config
   lineinfile:
-    dest: "/var/lib/lxc/{{ container.key }}/config"
+    dest: "/var/lib/lxc/{{ containers.key }}/config"
     line: "{{ item | replace('=', ' = ') | regex_replace('\\s+', ' ') }}"
     backup: "true"
   with_items: "{{ lxc_container_default_config_list | union(lxc_container_config_list) }}"
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   notify:
     - Lxc container restart
   tags:
@@ -158,15 +158,15 @@
     state: "directory"
     recurse: true
   with_items: "{{ lxc_container_default_bind_mounts | union(lxc_container_bind_mounts) }}"
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
 
 - name: Add bind mount configuration to container
   lineinfile:
-    dest: "/var/lib/lxc/{{ container.key }}/config"
+    dest: "/var/lib/lxc/{{ containers.key }}/config"
     line: "lxc.mount.entry = {{ item['host_directory'] }} {{ item['container_directory'].lstrip('/') }} none bind 0 0"
     backup: "true"
   with_items: "{{ lxc_container_default_bind_mounts | union(lxc_container_bind_mounts) }}"
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   notify:
     - Lxc container restart
   tags:
@@ -178,14 +178,14 @@
 #                  container restart isn't required to set a static mac.
 - name: Set define static mac address from an existing interface
   shell: |
-    if lxc-attach -n {{ container.key }} -- cat /sys/class/net/{{ item.value.interface }}/address; then
-      lxc-attach -n {{ container.key }} -- cat /sys/class/net/{{ item.value.interface }}/address > /var/lib/lxc/{{ container.key }}/{{ item.value.interface }}.hwaddr
+    if lxc-attach -n {{ containers.key }} -- cat /sys/class/net/{{ item.value.interface }}/address; then
+      lxc-attach -n {{ containers.key }} -- cat /sys/class/net/{{ item.value.interface }}/address > /var/lib/lxc/{{ containers.key }}/{{ item.value.interface }}.hwaddr
     fi
   args:
     executable: /bin/bash
-    creates: "/var/lib/lxc/{{ container.key }}/{{ item.value.interface }}.hwaddr"
+    creates: "/var/lib/lxc/{{ containers.key }}/{{ item.value.interface }}.hwaddr"
   with_dict: "{{ container_networks | default({}) }}"
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   failed_when: false
   when:
     - lxc_container_fixed_mac | bool
@@ -207,23 +207,23 @@
         for i in {1..6}; do
           echo -n ${hexchars:$(( $RANDOM % 16 )):1}
         done | sed -e 's/\(..\)/:\1/g'
-      )" > /var/lib/lxc/{{ container.key }}/{{ item.value.interface }}.hwaddr
+      )" > /var/lib/lxc/{{ containers.key }}/{{ item.value.interface }}.hwaddr
   args:
     executable: /bin/bash
-    creates: "/var/lib/lxc/{{ container.key }}/{{ item.value.interface }}.hwaddr"
+    creates: "/var/lib/lxc/{{ containers.key }}/{{ item.value.interface }}.hwaddr"
   with_dict: "{{ container_networks | default({}) }}"
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   when:
     - lxc_container_fixed_mac | bool
   tags:
     - lxc_container_create-networks
 
 - name: Gather hardware addresses to be used as facts
-  command: cat /var/lib/lxc/{{ container.key }}/{{ item.value.interface }}.hwaddr
+  command: cat /var/lib/lxc/{{ containers.key }}/{{ item.value.interface }}.hwaddr
   changed_when: false
   register: macs
   with_dict: "{{ container_networks | default({}) }}"
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   when:
     - lxc_container_fixed_mac | bool
   tags:
@@ -242,29 +242,29 @@
 - name: LXC host config for container networks
   template:
     src: "container-interface.ini.j2"
-    dest: "/var/lib/lxc/{{ container.key }}/{{ item.value.interface }}.ini"
+    dest: "/var/lib/lxc/{{ containers.key }}/{{ item.value.interface }}.ini"
     owner: "root"
     group: "root"
     mode: "0644"
   with_dict: "{{ container_networks | default({}) }}"
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   tags:
     - lxc_container_create-networks
 
 - name: Create start
   lxc_container:
-    name: "{{ container.key }}"
+    name: "{{ containers.key }}"
     state: started
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   tags:
     - lxc_container_create-create
 
 - name: Get LXC container PID
   command: >
-    lxc-info -pHn {{ container.key }}
+    lxc-info -pHn {{ containers.key }}
   register: container_pid
   changed_when: false
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   tags:
     - lxc_container_create-setup
 
@@ -276,7 +276,7 @@
     group: "root"
     mode: "0644"
   with_dict: "{{ container_networks | default({}) }}"
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   tags:
     - lxc_container_create-setup
 
@@ -292,7 +292,7 @@
     - lxc_container_default_route_interfaces | bool
     - item.value.static_routes is defined
   with_dict: "{{ container_networks | default({}) }}"
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   tags:
     - lxc_container_create-setup
 
@@ -303,20 +303,20 @@
     owner: "root"
     group: "root"
     mode: "0755"
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   tags:
     - lxc_container_create-setup
 
 - name: Run container setup script
   command: |
-    lxc-attach --name "{{ container.key }}" \
-               --logfile {{ lxc_container_log_path }}/lxc-{{ container.key }}.log \
+    lxc-attach --name "{{ containers.key }}" \
+               --logfile {{ lxc_container_log_path }}/lxc-{{ containers.key }}.log \
                --logpriority {{ (debug | bool) | ternary('DEBUG', 'INFO') }} \
                -- /opt/container-setup.sh
   register: container_setup
   changed_when: false
   failed_when: container_setup.rc != 0
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   tags:
     - lxc_container_create-setup
 
@@ -325,22 +325,22 @@
 # you'll find a "insertafter" in this YAML block.
 - name: Add veth pair name to match container name
   lineinfile:
-    dest: "/var/lib/lxc/{{ container.key }}/config"
-    line: "lxc.network.veth.pair = {{ container.key[-8:].replace('-', '').replace('_', '') }}_eth0"
+    dest: "/var/lib/lxc/{{ containers.key }}/config"
+    line: "lxc.network.veth.pair = {{ containers.key[-8:].replace('-', '').replace('_', '') }}_eth0"
     insertafter: "^lxc.network.name"
     backup: "true"
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   tags:
     - lxc_container_create-networks
 
 - name: Container network includes
   lineinfile:
-    dest: "/var/lib/lxc/{{ container.key }}/config"
-    line: "lxc.include = /var/lib/lxc/{{ container.key }}/{{ item.value.interface }}.ini"
+    dest: "/var/lib/lxc/{{ containers.key }}/config"
+    line: "lxc.include = /var/lib/lxc/{{ containers.key }}/{{ item.value.interface }}.ini"
     backup: "true"
   with_dict: "{{ container_networks | default({}) }}"
   when: item.value.interface is defined
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   tags:
     - lxc_container_create-networks
 
@@ -351,14 +351,14 @@
     owner: "root"
     group: "root"
     mode: "0755"
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   tags:
     - lxc_container_create-networks
 
 - name: Run container veth wiring script
   command: >
     /usr/local/bin/lxc-veth-wiring
-    "{{ container.key }}"
+    "{{ containers.key }}"
     "{{ lxc_container_network_veth_pair[-15:] }}"
     "{{ item.value.interface }}"
     "{{ item.value.bridge }}"
@@ -369,7 +369,7 @@
     - item.value.type is not defined or item.value.type == 'veth'
   failed_when: wiring_script.rc not in [3, 0]
   changed_when: wiring_script.rc == 3
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   tags:
     - lxc_container_create-networks
 
@@ -377,11 +377,11 @@
 - name: Drop veth cleanup script
   template:
     src: "veth-cleanup.sh.j2"
-    dest: "/var/lib/lxc/{{ container.key }}/veth-cleanup.sh"
+    dest: "/var/lib/lxc/{{ containers.key }}/veth-cleanup.sh"
     owner: "root"
     group: "root"
     mode: "0755"
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   tags:
     - lxc_container_create-networks
 
@@ -391,13 +391,13 @@
 #  Container restart is not happening here because it's not needed.
 - name: Defines a pre and post hook script
   lineinfile:
-    dest: "/var/lib/lxc/{{ container.key }}/config"
+    dest: "/var/lib/lxc/{{ containers.key }}/config"
     line: "{{ item }}"
     backup: "true"
   with_items:
-    - "lxc.hook.pre-start = /var/lib/lxc/{{ container.key }}/veth-cleanup.sh"
-    - "lxc.hook.post-stop = /var/lib/lxc/{{ container.key }}/veth-cleanup.sh"
-  delegate_to: "{{ physical_host }}"
+    - "lxc.hook.pre-start = /var/lib/lxc/{{ containers.key }}/veth-cleanup.sh"
+    - "lxc.hook.post-stop = /var/lib/lxc/{{ containers.key }}/veth-cleanup.sh"
+  delegate_to: "{{ containers.key.physical_host }}"
   tags:
     - lxc_container_create-networks
 
@@ -407,13 +407,13 @@
 - name: Wait for ssh to be available
   wait_for:
     port: "{{ ansible_port | default('22') }}"
-    host: "{{ ansible_host | default(container.key) }}"
+    host: "{{ ansible_host | default(containers.key) }}"
     search_regex: OpenSSH
     delay: "{{ lxc_container_ssh_delay }}"
   register: ssh_wait_check
   until: ssh_wait_check | success
   retries: 3
-  delegate_to: "{{ physical_host }}"
+  delegate_to: "{{ containers.key.physical_host }}"
   tags:
     - lxc_container_create-networks
 
@@ -444,7 +444,7 @@
   lineinfile:
     dest: "/etc/hosts"
     regexp: "^127.0.1.1"
-    line: "127.0.1.1 {{ container.key | replace('_', '-') }}.{{ lxc_container_domain }} {{ container.key | replace('_', '-') }}"
+    line: "127.0.1.1 {{ containers.key | replace('_', '-') }}.{{ lxc_container_domain }} {{ containers.key | replace('_', '-') }}"
     owner: "root"
     group: "root"
     mode: "0644"
@@ -455,7 +455,7 @@
 - name: Create hostname
   copy:
     dest: "/etc/hostname"
-    content: "{{ container.key | replace('_', '-') }}"
+    content: "{{ containers.key | replace('_', '-') }}"
     owner: "root"
     group: "root"
     mode: "0644"
