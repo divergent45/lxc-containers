@@ -7,3 +7,6 @@
   
   roles:
    - role: lxc_hosts
+     tags: 
+       - lxc-hosts
+- hosts: lxc-containers

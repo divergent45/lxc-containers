@@ -1,3 +1,43 @@
 ---
-
-  
+containers:
+  container_test_2: 
+      ansible_host: 10.0.0.55
+      ansible_port: 22
+      component: ntp-master_component
+      container_address: 10.0.0.55
+      container_name: container_test_2
+      container_networks: 
+        container_address:
+                address: 10.0.0.55
+                bridge: br-mgmt
+                interface:  eth1
+                netmask: 255.255.255.0
+                type: veth
+      physical_host: haproxy2
+      physical_host_group: ntp-master_hosts
+      properties: 
+              service_name: ntp-master
+     
+  container_test_3: 
+      ansible_host: 10.0.0.56
+      ansible_port: 22
+      component: ntp-master_component
+      container_address: 10.0.0.56
+      container_name: container_test_3
+      container_networks: 
+        container_address:
+                address: 10.0.0.56
+                bridge: br-mgmt
+                interface:  eth1
+                netmask: 255.255.255.0
+                type: veth
+      #  storage_address:
+      #          address: 14.142.104.141
+      #          bridge: br-internet
+      #          interface: eth2
+      #          netmask: 255.255.255.0
+      #          type: veth             
+      physical_host: haproxy2
+      physical_host_group: ntp-master_hosts
+      properties: 
+              service_name: ntp-master
