@@ -1,12 +1,9 @@
----
-- hosts: baremetals
+- hosts: lxc-containers
   vars_files: 
     - defination.yml    
   become: true
   gather_facts: true
-  
   roles:
-   - role: lxc_hosts
+   - role: lxc_container_create
      tags: 
-       - lxc-hosts       
-       
+       - container-create
