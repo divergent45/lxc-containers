@@ -1,2 +1,2 @@
 [baremetals]
-haproxy2 ansible_host-10.0.0.52 ansible_port=2223
+haproxy2 ansible_host=10.0.0.52 ansible_port=2223
