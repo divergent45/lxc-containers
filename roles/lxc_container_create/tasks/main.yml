@@ -42,10 +42,10 @@
     - always
  
 - debug:
-    msg: "{{ item }}"
+    msg: "{{ item.physical_host }}"
   with_items:
-    - "{{ containers.key.physical_host }}"     
-    - "{{ containers.key }}"
+    - "{{ containers }}"     
+    
 #- include: container_create.yml
 #  when:
 #    - {{ containers.key.physical_host  is defined }}
