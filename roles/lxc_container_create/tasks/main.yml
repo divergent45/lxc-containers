@@ -44,8 +44,8 @@
 - debug:
     msg: "{{ item }}"
   with_items:
-    - {{ containers.key.physical_host }}     
-    - {{ containers.key }}
+    - "{{ containers.key.physical_host }}"     
+    - "{{ containers.key }}"
 - include: container_create.yml
   when:
     - {{ containers.key.physical_host  is defined }}
