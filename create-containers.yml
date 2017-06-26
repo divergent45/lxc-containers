@@ -1,4 +1,4 @@
-- hosts: lxc-containers
+- hosts: baremetals
   vars_files: 
     - defination.yml    
   become: true
