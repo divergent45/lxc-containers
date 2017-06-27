@@ -53,8 +53,10 @@
              component={{outer_item.ansible_port}}
              container_address={{outer_item.container_address}}
              physical_host_group={{outer_item.physical_host_group}}
+             ansible_host={{outer_item.ansible_host}}
+             ansible_port={{outer_item.ansible_port}}
              "
-#ansible_port={{outer_item.ansible_port}}
+
   with_items:
     - "{{ containers }}" 
   loop_control:
