@@ -15,7 +15,7 @@
 
 - name: Checking varibale passed from inlcude 
   debug:
-    msg: " variable values received from include statement:  -  {{ physical_host }} {{ inventory_hostname }}"
+    msg: " variable values received from include statement:  -  {{ physical_host }} {{ inventory_hostname }} {{ lxc_container_download_template_options }}"
     
 - name: Check for lxc volume group
   shell: "(which vgs > /dev/null && vgs | grep -o '{{ lxc_container_vg_name }}') || false"
@@ -57,6 +57,8 @@
   delegate_to: "{{ physical_host }}"
   tags:
     - lxc_container_create-autodev
+ 
+
 
 - name: Create container
   lxc_container:
