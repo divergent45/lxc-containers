@@ -13,7 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+- name: Checking varibale passwed from inlcude 
+  debug:
+    msg: physical_host
+    
 - name: Check for lxc volume group
   shell: "(which vgs > /dev/null && vgs | grep -o '{{ lxc_container_vg_name }}') || false"
   register: vg_result
