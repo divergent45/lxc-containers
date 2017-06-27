@@ -46,7 +46,7 @@
   with_items:
     - "{{ containers }}"     
     
-- include: container_create.yml  physical_host={{outer_item.physical_host}} inventory_hostname={{outer_item.container_name}}  properties={{outer_item.properties}}
+- include: container_create.yml  physical_host={{outer_item.physical_host}} inventory_hostname={{outer_item.container_name}}  properties={{outer_item.properties}} container_name={{outer_item.container_name}}
   with_items:
     - "{{ containers }}" 
   loop_control:
