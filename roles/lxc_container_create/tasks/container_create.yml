@@ -16,7 +16,8 @@
 - name: Checking varibale passed from inlcude 
   debug:
     msg: " variable values received from include statement:  -  {{ physical_host }} {{ inventory_hostname }} 
-     {{hostvars[physical_host]['ansible_architecture']}} "
+    {{hostvars[physical_host]}}"
+    # {{hostvars[physical_host]['ansible_architecture']}} "
     #{{ lxc_container_download_template_options }}"
     
 - name: Check for lxc volume group
