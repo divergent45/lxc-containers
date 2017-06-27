@@ -46,11 +46,11 @@
   with_items:
     - "{{ containers }}"     
     
-- include: container_create.yml  physical_host = "{{ item.physical_host }}" inventory_hostname = "{{ item }}" 
+- include: container_create.yml  physical_host = "{{ item.physical_host }}" inventory_hostname = "{{ item.container_name }}" 
   when:
     - "{{ item.physical_host  is defined }}"
-    - "{{ item is defined }}"
-    - "{{ item.physical_host != item }}"
+    - "{{ item.container_name is defined }}"
+    - "{{ item.physical_host != item.container_name }}"
   with_items:
     - "{{ containers }}" 
   tags:
