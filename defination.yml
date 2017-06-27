@@ -16,6 +16,7 @@ containers:
       physical_host_group: ntp-master_hosts
       properties: 
               service_name: ntp-master
+              container_fs_size: 5G
      
     - container_name: container_test_3
       ansible_host: 10.0.0.56
@@ -39,3 +40,4 @@ containers:
       physical_host_group: ntp-master_hosts
       properties: 
               service_name: ntp-master
+              container_fs_size: 5G
