@@ -15,7 +15,7 @@
 
 - name: Checking varibale passwed from inlcude 
   debug:
-    msg: physical_host
+    msg: "{{ physical_host }}"
     
 - name: Check for lxc volume group
   shell: "(which vgs > /dev/null && vgs | grep -o '{{ lxc_container_vg_name }}') || false"
