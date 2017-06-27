@@ -48,9 +48,9 @@
     
 - include: container_create.yml
   when:
-    - {{ item.key.physical_host  is defined }}
-    - {{ item.key is defined }}
-    - {{ item.key.physical_host != containers.key }}
+    - "{{ item.key.physical_host  is defined }}"
+    - "{{ item.key is defined }}"
+    - "{{ item.key.physical_host != containers.key }}"
   with_items:
     - "{{ containers }}" 
   tags:
