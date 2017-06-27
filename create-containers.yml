@@ -4,6 +4,6 @@
   become: true
   gather_facts: true
   roles:
-   - role: lxc_container_create
+   - role: lxc_container_create 
      tags: 
        - container-create
