@@ -1,8 +1,6 @@
 ---
 containers:
-    - container_name: container_test_2
-      ansible_host: 10.0.0.55
-      ansible_port: 22
+    - container_name: container_test_2      
       component: ntp-master_component
       container_address: 10.0.0.55      
       container_networks: 
@@ -18,9 +16,7 @@ containers:
               service_name: ntp-master
               container_fs_size: 5G
      
-    - container_name: container_test_3
-      ansible_host: 10.0.0.56
-      ansible_port: 22
+    - container_name: container_test_3      
       component: ntp-master_component
       container_address: 10.0.0.56
       container_networks: 

@@ -1,4 +1,4 @@
-- hosts: baremetals
+- hosts: all_containers
   vars_files: 
     - defination.yml    
   become: true
