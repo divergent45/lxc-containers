@@ -1,7 +1,7 @@
 ---
 - name: Gather lxc container host facts
   hosts: baremetals
-  gather_facts: True)
+  gather_facts: True
 
 - hosts: all_containers
   vars_files: 
