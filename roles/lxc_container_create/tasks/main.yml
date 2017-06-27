@@ -46,13 +46,15 @@
   with_items:
     - "{{ containers }}"     
     
-- include: container_create.yml  physical_host={{item.physical_host}} inventory_hostname={{item.container_name}} 
+- include: container_create.yml  physical_host={{outer_item.physical_host}} inventory_hostname={{outer_item.container_name}} 
   with_items:
     - "{{ containers }}" 
+  loop_control:
+    loop_var: outer_item
 #  when:
-#    - physical_host  is defined
-#    - inventory_hostname is defined
-#    - physical_host != inventory_hostname
+#    - outer_item.physical_host  is defined
+#    - outer_item.container_name is defined
+#    - outer_item.physical_host != outer_item.container_name
   
   tags:
     - lxc_container_create
