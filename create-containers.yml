@@ -1,3 +1,8 @@
+---
+- name: Gather lxc container host facts
+  hosts: baremetals
+  gather_facts: True)
+
 - hosts: all_containers
   vars_files: 
     - defination.yml    
@@ -5,5 +10,4 @@
   gather_facts: true
   roles:
    - role: lxc_container_create 
-     tags: 
-       - container-create
+     
