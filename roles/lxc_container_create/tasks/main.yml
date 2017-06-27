@@ -50,9 +50,9 @@
   with_items:
     - "{{ containers }}" 
   when:
-    - item.physical_host  is defined
-    - item.container_name is defined
-    - item.physical_host != item.container_name
+    - physical_host  is defined
+    - inventory_hostname is defined
+    - physical_host != inventory_hostname
   
   tags:
     - lxc_container_create
