@@ -49,10 +49,10 @@
 - include: container_create.yml  physical_host={{item.physical_host}} inventory_hostname={{item.container_name}} 
   with_items:
     - "{{ containers }}" 
-  when:
-    - physical_host  is defined
-    - inventory_hostname is defined
-    - physical_host != inventory_hostname
+#  when:
+#    - physical_host  is defined
+#    - inventory_hostname is defined
+#    - physical_host != inventory_hostname
   
   tags:
     - lxc_container_create
