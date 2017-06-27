@@ -50,7 +50,7 @@
   when:
     - "{{ item.physical_host  is defined }}"
     - "{{ item is defined }}"
-    - "{{ item.physical_host != containers.key }}"
+    - "{{ item.physical_host != item }}"
   with_items:
     - "{{ containers }}" 
   tags:
